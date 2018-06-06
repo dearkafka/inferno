@@ -224,8 +224,7 @@ class TensorboardLogger(Logger):
 
         if self.trainer._use_cuda:
             rnd = rnd.cuda()
-        self.log_graph(self.trainer.model, self.trainer.model(rnd))
-
+        self.log_graph(self.trainer.model, rnd)
 
     def extract_images_from_batch(self, batch):
         # Special case when batch is a list or tuple of batches
