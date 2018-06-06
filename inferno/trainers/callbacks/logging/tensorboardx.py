@@ -17,6 +17,8 @@ from ....utils import train_utils as tru
 from ....utils.exceptions import assert_
 from tensorboardX import SummaryWriter
 import torchvision.utils as vutils
+import torch
+from torch.autograd import Variable
 
 
 class TensorboardLogger(Logger):
@@ -214,6 +216,17 @@ class TensorboardLogger(Logger):
                             allow_scalar_logging=True,
                             allow_image_logging=True)
 
+    def begin_of_fit(self, **_):
+        # this will work only with our models bc of `input_shape`
+        # moreover, can't get why batchnorm take >1 b_size even in FORWARD
+        # need to fix cuda
+        rnd = Variable(torch.randn((2,) + self.trainer.model.input_shape))
+
+        if self.trainer._use_cuda:
+            rnd = rnd.cuda()
+        self.log_graph(self.trainer.model, self.trainer.model(rnd))
+
+
     def extract_images_from_batch(self, batch):
         # Special case when batch is a list or tuple of batches
         if isinstance(batch, (list, tuple)):
@@ -305,6 +318,9 @@ class TensorboardLogger(Logger):
 
         # Create and write Summary
         self.writer.add_image(tag, img_grid, step)
+
+    def log_graph(self, model, input):
+        self.writer.add_graph(model, model(input))
 
     def log_histogram(self, tag, values, step, bins=1000):
         """Logs the histogram of a list/vector of values."""
