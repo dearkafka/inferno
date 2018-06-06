@@ -319,7 +319,9 @@ class TensorboardLogger(Logger):
         self.writer.add_image(tag, img_grid, step)
 
     def log_graph(self, model, input):
-        self.writer.add_graph(model, model(input))
+
+        prediction = self.apply_model(input)
+        self.writer.add_graph(model, prediction)
 
     def log_histogram(self, tag, values, step, bins=1000):
         """Logs the histogram of a list/vector of values."""
