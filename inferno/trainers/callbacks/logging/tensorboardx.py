@@ -275,10 +275,10 @@ class TensorboardLogger(Logger):
             # I'm going to hell for this.
             image_list = [image
                           for instance_num, instance in enumerate(batch)
-                          for channel_num, volume in enumerate(instance)
-                          for slice_num, image in enumerate(volume)
+                          #for channel_num, volume in enumerate(instance)
+                          for slice_num, image in enumerate(instance)
                           if instance_num in batch_indices and
-                          channel_num in channel_indices and
+                          #channel_num in channel_indices and
                           slice_num in z_indices]
         # Done.
         return image_list
