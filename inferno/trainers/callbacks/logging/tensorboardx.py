@@ -3,10 +3,6 @@ try:
 except ImportError:
     tf = None
 try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO, BytesIO
-try:
     import matplotlib.pyplot as plt
 except ImportError:
     plt = None
@@ -254,7 +250,7 @@ class TensorboardLogger(Logger):
             raise NotImplementedError
         # Extract images from batch
         if batch_is_image_tensor:
-            image_list = [image
+            image_list = [image.unsqueeze(0) if len(image.shape) == 2 else image
                           for instance_num, instance in enumerate(batch)
                           for channel_num, image in enumerate(instance)
                           if instance_num in batch_indices and channel_num in channel_indices]
@@ -272,8 +268,9 @@ class TensorboardLogger(Logger):
                 z_indices = [z_indices]
             else:
                 raise NotImplementedError
+
             # I'm going to hell for this.
-            image_list = [image.unsqueeze(0)
+            image_list = [image.unsqueeze(0) if len(image.shape) == 2 else image
                           for instance_num, instance in enumerate(batch)
                           for channel_num, volume in enumerate(instance)
                           for slice_num, image in enumerate(volume)
