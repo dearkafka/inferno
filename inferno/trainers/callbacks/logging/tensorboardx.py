@@ -220,7 +220,7 @@ class TensorboardLogger(Logger):
         # this will work only with our models bc of `input_shape`
         # moreover, can't get why batchnorm take >1 b_size even in FORWARD
         # need to fix cuda
-        rnd = Variable(torch.randn((2,) + self.trainer.model.input_shape))
+        rnd = Variable(torch.randn((4,) + self.trainer.model.input_shape))
 
         if self.trainer._use_cuda:
             rnd = rnd.cuda()
