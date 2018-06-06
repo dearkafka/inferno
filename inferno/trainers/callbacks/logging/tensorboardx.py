@@ -273,12 +273,12 @@ class TensorboardLogger(Logger):
             else:
                 raise NotImplementedError
             # I'm going to hell for this.
-            image_list = [image
+            image_list = [image.unsqueeze(0)
                           for instance_num, instance in enumerate(batch)
-                          #for channel_num, volume in enumerate(instance)
-                          for slice_num, image in enumerate(instance)
+                          for channel_num, volume in enumerate(instance)
+                          for slice_num, image in enumerate(volume)
                           if instance_num in batch_indices and
-                          #channel_num in channel_indices and
+                          channel_num in channel_indices and
                           slice_num in z_indices]
         # Done.
         return image_list
