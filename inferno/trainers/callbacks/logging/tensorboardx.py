@@ -320,7 +320,7 @@ class TensorboardLogger(Logger):
 
     def log_graph(self, model, input):
 
-        prediction = self.apply_model(input)
+        prediction = self.trainer.apply_model(input)
         self.writer.add_graph(model, prediction)
 
     def log_histogram(self, tag, values, step, bins=1000):
