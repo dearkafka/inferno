@@ -160,7 +160,8 @@ class TensorboardLogger(Logger):
             self.observe_training_and_validation_state(key)
         return self
 
-    def log_object(self, tag, object_, allow_scalar_logging=True, allow_image_logging=True):
+    def log_object(self, tag, object_, allow_scalar_logging=True,
+                   allow_image_logging=True, allow_histogram_logging=True):
         assert isinstance(tag, str)
         if isinstance(object_, (list, tuple)):
             for object_num, _object in enumerate(object_):
@@ -225,6 +226,12 @@ class TensorboardLogger(Logger):
         if self.trainer._use_cuda:
             rnd = rnd.cuda()
         self.log_graph(self.trainer.model, rnd)
+
+    def end_of_training_run(self, **_):
+        # ok, this is hack bc integrating param histo properly is pain
+        for name, param in self.trainer.model.named_parameters():
+            self.writer.add_histogram(name, param.clone().cpu().data.numpy(), self.trainer.iteration_count)
+
 
     def extract_images_from_batch(self, batch):
         # Special case when batch is a list or tuple of batches
@@ -321,35 +328,10 @@ class TensorboardLogger(Logger):
     def log_graph(self, model, input):
         self.writer.add_graph(model, input)
 
-    def log_histogram(self, tag, values, step, bins=1000):
+    def log_histogram(self, tag, values, step):
         """Logs the histogram of a list/vector of values."""
 
-        # Create histogram using numpy
-        counts, bin_edges = np.histogram(values, bins=bins)
-
-        # Fill fields of histogram proto
-        hist = tf.HistogramProto()
-        hist.min = float(np.min(values))
-        hist.max = float(np.max(values))
-        hist.num = int(np.prod(values.shape))
-        hist.sum = float(np.sum(values))
-        hist.sum_squares = float(np.sum(values**2))
-
-        # Requires equal number as bins, where the first goes from -DBL_MAX to bin_edges[1]
-        # See https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/summary.proto#L30
-        # Thus, we drop the start of the first bin
-        bin_edges = bin_edges[1:]
-
-        # Add bin edges and counts
-        for edge in bin_edges:
-            hist.bucket_limit.append(edge)
-        for c in counts:
-            hist.bucket.append(c)
-
-        # Create and write Summary
-        summary = tf.Summary(value=[tf.Summary.Value(tag=tag, histo=hist)])
-        self.writer.add_summary(summary, step)
-        self.writer.flush()
+        self.writer.add_histogram(tag, values, step)
 
     def get_config(self):
         # Apparently, some SwigPyObject objects cannot be pickled - so we need to build the
